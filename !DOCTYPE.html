@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Animated Tic Tac Toe</title>
+
+<style>
+
+/* =========================
+   BASIC
+========================= */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-family: Arial, sans-serif;
+
+    background:
+        linear-gradient(135deg, #080808, #252525);
+
+    color: white;
+
+}
+
+
+/* =========================
+   GAME
+========================= */
+
+.game {
+
+    text-align: center;
+
+}
+
+
+h1 {
+
+    font-size: 42px;
+
+    margin-bottom: 10px;
+
+}
+
+
+#status {
+
+    font-size: 24px;
+
+    margin-bottom: 25px;
+
+}
+
+
+/* =========================
+   BOARD
+========================= */
+
+.board {
+
+    position: relative;
+
+    width: 330px;
+
+    height: 330px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    grid-template-rows:
+        repeat(3, 1fr);
+
+    gap: 8px;
+
+}
+
+
+/* =========================
+   CELLS
+========================= */
+
+.cell {
+
+    background: #333;
+
+    border: 2px solid #555;
+
+    border-radius: 15px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-size: 65px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    user-select: none;
+
+    transition: 0.2s;
+
+}
+
+
+.cell:hover {
+
+    background: #444;
+
+    transform: scale(1.03);
+
+}
+
+
+/* =========================
+   X / O ANIMATION
+========================= */
+
+.mark {
+
+    display: inline-block;
+
+    animation:
+        markAppear 0.35s ease-out;
+
+}
+
+
+@keyframes markAppear {
+
+    0% {
+
+        transform:
+            scale(0)
+            rotate(-180deg);
+
+        opacity: 0;
+
+    }
+
+    70% {
+
+        transform:
+            scale(1.25)
+            rotate(20deg);
+
+        opacity: 1;
+
+    }
+
+    100% {
+
+        transform:
+            scale(1)
+            rotate(0deg);
+
+    }
+
+}
+
+
+/* =========================
+   WINNING CELLS
+========================= */
+
+.winner {
+
+    animation:
+        winnerPulse 0.5s
+        infinite alternate;
+
+}
+
+
+@keyframes winnerPulse {
+
+    from {
+
+        transform: scale(1);
+
+        background: #333;
+
+    }
+
+    to {
+
+        transform: scale(1.08);
+
+        background: #555;
+
+    }
+
+}
+
+
+/* =========================
+   WINNING LINE
+========================= */
+
+#winLine {
+
+    position: absolute;
+
+    /* IMPORTANT FIX */
+    pointer-events: none;
+
+    height: 8px;
+
+    background: red;
+
+    border-radius: 20px;
+
+    transform-origin: left center;
+
+    display: none;
+
+    z-index: 10;
+
+    box-shadow:
+        0 0 15px red;
+
+    animation:
+        lineAnimation 0.5s
+        ease-out;
+
+}
+
+
+@keyframes lineAnimation {
+
+    from {
+
+        width: 0;
+
+    }
+
+}
+
+
+/* =========================
+   BUTTON
+========================= */
+
+button {
+
+    margin-top: 30px;
+
+    padding: 12px 28px;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    border: none;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    background: white;
+
+    color: black;
+
+    transition: 0.2s;
+
+}
+
+
+button:hover {
+
+    transform: scale(1.08);
+
+}
+
+
+/* =========================
+   RESULT SCREEN
+========================= */
+
+#result {
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(0,0,0,0.88);
+
+    display: none;
+
+    justify-content: center;
+
+    align-items: center;
+
+    z-index: 100;
+
+}
+
+
+.resultBox {
+
+    text-align: center;
+
+    animation:
+        resultAppear 0.6s
+        ease-out;
+
+}
+
+
+@keyframes resultAppear {
+
+    0% {
+
+        transform: scale(0);
+
+        opacity: 0;
+
+    }
+
+    70% {
+
+        transform: scale(1.2);
+
+    }
+
+    100% {
+
+        transform: scale(1);
+
+        opacity: 1;
+
+    }
+
+}
+
+
+#resultTitle {
+
+    font-size: 65px;
+
+    margin: 0;
+
+}
+
+
+#resultMessage {
+
+    font-size: 28px;
+
+    margin-top: 10px;
+
+}
+
+
+/* =========================
+   WIN TEXT
+========================= */
+
+.winText {
+
+    animation:
+        winText 0.5s
+        infinite alternate;
+
+}
+
+
+@keyframes winText {
+
+    from {
+
+        transform: scale(1);
+
+    }
+
+    to {
+
+        transform: scale(1.15);
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="game">
+
+
+    <h1>
+        🎮 TIC TAC TOE
+    </h1>
+
+
+    <div id="status">
+        Player X Turn
+    </div>
+
+
+    <div
+        class="board"
+        id="board"
+    >
+
+
+        <!-- ROW 1 -->
+
+        <div
+            class="cell"
+            onclick="play(this,0)"
+        ></div>
+
+        <div
+            class="cell"
+            onclick="play(this,1)"
+        ></div>
+
+        <div
+            class="cell"
+            onclick="play(this,2)"
+        ></div>
+
+
+        <!-- ROW 2 -->
+
+        <div
+            class="cell"
+            onclick="play(this,3)"
+        ></div>
+
+        <div
+            class="cell"
+            onclick="play(this,4)"
+        ></div>
+
+        <div
+            class="cell"
+            onclick="play(this,5)"
+        ></div>
+
+
+        <!-- ROW 3 -->
+
+        <div
+            class="cell"
+            onclick="play(this,6)"
+        ></div>
+
+        <div
+            class="cell"
+            onclick="play(this,7)"
+        ></div>
+
+        <div
+            class="cell"
+            onclick="play(this,8)"
+        ></div>
+
+
+        <!-- WINNING LINE -->
+
+        <div id="winLine"></div>
+
+
+    </div>
+
+
+    <button
+        onclick="restartGame()"
+    >
+
+        🔄 Restart
+
+    </button>
+
+
+</div>
+
+
+<!-- =========================
+     RESULT SCREEN
+========================= -->
+
+<div id="result">
+
+
+    <div class="resultBox">
+
+
+        <h1 id="resultTitle">
+            🎉 X WINS!
+        </h1>
+
+
+        <div id="resultMessage">
+            AMAZING!
+        </div>
+
+
+        <button
+            onclick="restartGame()"
+        >
+
+            🎮 Play Again
+
+        </button>
+
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+/* =========================
+   GAME VARIABLES
+========================= */
+
+let currentPlayer = "X";
+
+let gameOver = false;
+
+
+let board = [
+
+    "",
+    "",
+    "",
+
+    "",
+    "",
+    "",
+
+    "",
+    "",
+    ""
+
+];
+
+
+/* =========================
+   WIN COMBINATIONS
+========================= */
+
+const wins = [
+
+    [0,1,2],
+
+    [3,4,5],
+
+    [6,7,8],
+
+    [0,3,6],
+
+    [1,4,7],
+
+    [2,5,8],
+
+    [0,4,8],
+
+    [2,4,6]
+
+];
+
+
+/* =========================
+   AUDIO
+========================= */
+
+let audioContext = null;
+
+
+/* START AUDIO */
+
+function startAudio() {
+
+    if (!audioContext) {
+
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+    }
+
+
+    if (
+        audioContext.state ===
+        "suspended"
+    ) {
+
+        audioContext.resume();
+
+    }
+
+}
+
+
+/* CREATE SOUND */
+
+function sound(
+    frequency,
+    duration,
+    type = "sine",
+    volume = 0.15
+) {
+
+    startAudio();
+
+
+    const oscillator =
+        audioContext.createOscillator();
+
+
+    const gain =
+        audioContext.createGain();
+
+
+    oscillator.type =
+        type;
+
+
+    oscillator.frequency.value =
+        frequency;
+
+
+    gain.gain.setValueAtTime(
+
+        volume,
+
+        audioContext.currentTime
+
+    );
+
+
+    gain.gain.exponentialRampToValueAtTime(
+
+        0.001,
+
+        audioContext.currentTime +
+        duration
+
+    );
+
+
+    oscillator.connect(gain);
+
+    gain.connect(
+        audioContext.destination
+    );
+
+
+    oscillator.start();
+
+
+    oscillator.stop(
+
+        audioContext.currentTime +
+        duration
+
+    );
+
+}
+
+
+/* =========================
+   MOVE SOUND
+========================= */
+
+function moveSound() {
+
+    sound(
+        500,
+        0.08,
+        "square",
+        0.12
+    );
+
+}
+
+
+/* =========================
+   WIN SOUND
+========================= */
+
+function winSound() {
+
+    startAudio();
+
+
+    sound(
+        523,
+        0.15,
+        "sine",
+        0.20
+    );
+
+
+    setTimeout(() => {
+
+        sound(
+            659,
+            0.15,
+            "sine",
+            0.20
+        );
+
+    }, 150);
+
+
+    setTimeout(() => {
+
+        sound(
+            784,
+            0.20,
+            "sine",
+            0.20
+        );
+
+    }, 300);
+
+
+    setTimeout(() => {
+
+        sound(
+            1046,
+            0.40,
+            "sine",
+            0.25
+        );
+
+    }, 450);
+
+}
+
+
+/* =========================
+   DRAW SOUND
+========================= */
+
+function drawSound() {
+
+    sound(
+        300,
+        0.20,
+        "triangle",
+        0.20
+    );
+
+
+    setTimeout(() => {
+
+        sound(
+            200,
+            0.30,
+            "triangle",
+            0.20
+        );
+
+    }, 220);
+
+}
+
+
+/* =========================
+   PLAY
+========================= */
+
+function play(cell,index) {
+
+
+    /* GAME ALREADY FINISHED */
+
+    if (gameOver) {
+
+        return;
+
+    }
+
+
+    /* CELL ALREADY USED */
+
+    if (board[index] !== "") {
+
+        return;
+
+    }
+
+
+    /* START AUDIO */
+
+    startAudio();
+
+
+    /* SAVE MOVE */
+
+    board[index] =
+        currentPlayer;
+
+
+    /* DISPLAY X OR O */
+
+    cell.innerHTML =
+        `<span class="mark">
+            ${currentPlayer}
+        </span>`;
+
+
+    /* PLAY CLICK SOUND */
+
+    moveSound();
+
+
+    /* CHECK WIN */
+
+    const winningCombo =
+        checkWinner();
+
+
+    if (winningCombo) {
+
+
+        gameOver = true;
+
+
+        /* WINNING CELLS */
+
+        winningCombo.forEach(index => {
+
+            document
+                .querySelectorAll(".cell")
+                [index]
+                .classList
+                .add("winner");
+
+        });
+
+
+        /* WINNING LINE */
+
+        drawWinningLine(
+            winningCombo
+        );
+
+
+        /* WIN SCREEN */
+
+        showWinner();
+
+
+        return;
+
+    }
+
+
+    /* CHECK DRAW */
+
+    if (!board.includes("")) {
+
+        gameOver = true;
+
+        showDraw();
+
+        return;
+
+    }
+
+
+    /* CHANGE PLAYER */
+
+    currentPlayer =
+        currentPlayer === "X"
+        ? "O"
+        : "X";
+
+
+    document
+        .getElementById("status")
+        .innerText =
+            "Player " +
+            currentPlayer +
+            " Turn";
+
+}
+
+
+/* =========================
+   CHECK WINNER
+========================= */
+
+function checkWinner() {
+
+
+    for (
+        let combo of wins
+    ) {
+
+
+        let a =
+            combo[0];
+
+
+        let b =
+            combo[1];
+
+
+        let c =
+            combo[2];
+
+
+        if (
+
+            board[a] !== "" &&
+
+            board[a] ===
+            board[b] &&
+
+            board[b] ===
+            board[c]
+
+        ) {
+
+            return combo;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+/* =========================
+   DRAW WIN LINE
+========================= */
+
+function drawWinningLine(
+    combo
+) {
+
+
+    const cells =
+        document
+            .querySelectorAll(
+                ".cell"
+            );
+
+
+    const first =
+        cells[
+            combo[0]
+        ].getBoundingClientRect();
+
+
+    const last =
+        cells[
+            combo[2]
+        ].getBoundingClientRect();
+
+
+    const boardRect =
+        document
+            .getElementById(
+                "board"
+            )
+            .getBoundingClientRect();
+
+
+    const x1 =
+
+        first.left +
+        first.width / 2 -
+        boardRect.left;
+
+
+    const y1 =
+
+        first.top +
+        first.height / 2 -
+        boardRect.top;
+
+
+    const x2 =
+
+        last.left +
+        last.width / 2 -
+        boardRect.left;
+
+
+    const y2 =
+
+        last.top +
+        last.height / 2 -
+        boardRect.top;
+
+
+    const length =
+
+        Math.sqrt(
+
+            Math.pow(
+                x2 - x1,
+                2
+            )
+
+            +
+
+            Math.pow(
+                y2 - y1,
+                2
+            )
+
+        );
+
+
+    const angle =
+
+        Math.atan2(
+            y2 - y1,
+            x2 - x1
+        )
+
+        *
+
+        180
+
+        /
+
+        Math.PI;
+
+
+    const line =
+        document
+            .getElementById(
+                "winLine"
+            );
+
+
+    line.style.display =
+        "block";
+
+
+    line.style.width =
+        length + "px";
+
+
+    line.style.left =
+        x1 + "px";
+
+
+    line.style.top =
+        y1 + "px";
+
+
+    line.style.transform =
+        `rotate(${angle}deg)`;
+
+}
+
+
+/* =========================
+   WIN SCREEN
+========================= */
+
+function showWinner() {
+
+
+    const result =
+        document
+            .getElementById(
+                "result"
+            );
+
+
+    const title =
+        document
+            .getElementById(
+                "resultTitle"
+            );
+
+
+    const message =
+        document
+            .getElementById(
+                "resultMessage"
+            );
+
+
+    title.innerText =
+
+        "🎉 " +
+        currentPlayer +
+        " WINS!";
+
+
+    message.innerText =
+        "🏆 AMAZING!";
+
+
+    title.classList.add(
+        "winText"
+    );
+
+
+    result.style.display =
+        "flex";
+
+
+    /* WIN SOUND */
+
+    winSound();
+
+
+    /* CONFETTI */
+
+    createConfetti();
+
+}
+
+
+/* =========================
+   DRAW SCREEN
+========================= */
+
+function showDraw() {
+
+
+    const result =
+        document
+            .getElementById(
+                "result"
+            );
+
+
+    const title =
+        document
+            .getElementById(
+                "resultTitle"
+            );
+
+
+    const message =
+        document
+            .getElementById(
+                "resultMessage"
+            );
+
+
+    title.innerText =
+        "🤝 DRAW!";
+
+
+    message.innerText =
+        "NOBODY WINS";
+
+
+    title.classList.remove(
+        "winText"
+    );
+
+
+    result.style.display =
+        "flex";
+
+
+    /* DRAW SOUND */
+
+    drawSound();
+
+}
+
+
+/* =========================
+   CONFETTI
+========================= */
+
+function createConfetti() {
+
+
+    for (
+        let i = 0;
+        i < 150;
+        i++
+    ) {
+
+
+        const piece =
+            document
+                .createElement(
+                    "div"
+                );
+
+
+        piece.style.position =
+            "fixed";
+
+
+        piece.style.width =
+            "8px";
+
+
+        piece.style.height =
+            "8px";
+
+
+        piece.style.background =
+            randomColor();
+
+
+        piece.style.left =
+            "50%";
+
+
+        piece.style.top =
+            "50%";
+
+
+        piece.style.zIndex =
+            "200";
+
+
+        piece.style.borderRadius =
+            "50%";
+
+
+        document
+            .body
+            .appendChild(
+                piece
+            );
+
+
+        const angle =
+
+            Math.random()
+            *
+            Math.PI
+            *
+            2;
+
+
+        const distance =
+
+            200 +
+            Math.random()
+            *
+            500;
+
+
+        const x =
+
+            Math.cos(angle)
+            *
+            distance;
+
+
+        const y =
+
+            Math.sin(angle)
+            *
+            distance;
+
+
+        piece.animate(
+
+            [
+
+                {
+
+                    transform:
+                        "translate(0,0) rotate(0deg)",
+
+                    opacity: 1
+
+                },
+
+                {
+
+                    transform:
+                        `translate(${x}px,${y}px) rotate(720deg)`,
+
+                    opacity: 0
+
+                }
+
+            ],
+
+            {
+
+                duration:
+                    1200 +
+                    Math.random()
+                    *
+                    1000,
+
+                easing:
+                    "cubic-bezier(.1,.8,.2,1)"
+
+            }
+
+        ).onfinish = () => {
+
+            piece.remove();
+
+        };
+
+    }
+
+}
+
+
+/* =========================
+   RANDOM COLOR
+========================= */
+
+function randomColor() {
+
+
+    const colors = [
+
+        "#ff0000",
+
+        "#00ff00",
+
+        "#0088ff",
+
+        "#ffff00",
+
+        "#ff00ff",
+
+        "#ffffff",
+
+        "#ff8800"
+
+    ];
+
+
+    return colors[
+
+        Math.floor(
+
+            Math.random()
+            *
+            colors.length
+
+        )
+
+    ];
+
+}
+
+
+/* =========================
+   RESTART
+========================= */
+
+function restartGame() {
+
+
+    board = [
+
+        "",
+        "",
+        "",
+
+        "",
+        "",
+        "",
+
+        "",
+        "",
+        ""
+
+    ];
+
+
+    currentPlayer =
+        "X";
+
+
+    gameOver =
+        false;
+
+
+    /* CLEAR CELLS */
+
+    document
+        .querySelectorAll(
+            ".cell"
+        )
+        .forEach(cell => {
+
+            cell.innerHTML =
+                "";
+
+            cell.classList
+                .remove(
+                    "winner"
+                );
+
+        });
+
+
+    /* HIDE WIN LINE */
+
+    document
+        .getElementById(
+            "winLine"
+        )
+        .style.display =
+            "none";
+
+
+    /* HIDE RESULT */
+
+    document
+        .getElementById(
+            "result"
+        )
+        .style.display =
+            "none";
+
+
+    /* RESET STATUS */
+
+    document
+        .getElementById(
+            "status"
+        )
+        .innerText =
+            "Player X Turn";
+
+}
+
+</script>
+
+</body>
+</html>
